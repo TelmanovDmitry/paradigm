@@ -1,5 +1,3 @@
-"use strict";
-
 function apply_operation(operation, symbol) {
     return function () {
         var operands = arguments;
@@ -17,21 +15,10 @@ var subtract = apply_operation(function (args) { return args[0] - args[1]; }, "-
 var add = apply_operation(function (args) { return args[0] + args[1]; }, "+");
 var multiply = apply_operation(function (args) { return args[0] * args[1]; }, "*");
 var divide = apply_operation(function (args) { return args[0] / args[1]; }, "/");
-var min = apply_operation(function (args) { return Math.min(args[0], args[1]); }, "min");
-var max = apply_operation(function (args) { return Math.max(args[0], args[1]); }, "max");
 var negate = apply_operation(function (args) { return -args[0]; }, "negate");
+var abs = apply_operation(function (args) { return Math.abs(args[0]); }, "abs");
+var iff = apply_operation(function (args) { return args[0] >= 0 ? args[1] : args[2]; }, "iff");
 
-function create_operation(operation, symbol) {
-    return function () {
-        var tmp = arguments[0];
-        for (var i = 1; i < NUM_OF_OPERANDS[symbol]; i++) {
-            tmp = operation(tmp, arguments[i]);
-        }
-        return tmp;
-    }
-}
-var min3 = create_operation(min, "min3");
-var max5 = create_operation(max, "max5");
 
 var VARIABLES = {
     "x" : 0,
@@ -50,6 +37,8 @@ function variable(val) {
 }
 
 var CONST = {
+    "one" : 1,
+    "two" : 2,
     "pi": Math.PI,
     "e": Math.E
 };
@@ -65,10 +54,8 @@ function cnst(num) {
 }
 
 var OPERATIONS = {
-    "min" : min,
-    "max" : max,
-    "min3" : min3,
-    "max5" : max5,
+    "abs" : abs,
+    "iff" : iff,
     "negate" : negate,
     "+" : add,
     "-" : subtract,
@@ -77,11 +64,9 @@ var OPERATIONS = {
 };
 
 var NUM_OF_OPERANDS = {
-    "min" : 2,
-    "max" : 2,
-    "min3" : 3,
-    "max5" : 5,
+    "abs" : 1,
     "negate" : 1,
+    "iff" : 3,
     "+" : 2,
     "-" : 2,
     "*" : 2,
