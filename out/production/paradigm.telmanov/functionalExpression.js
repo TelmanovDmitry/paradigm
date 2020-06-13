@@ -65,8 +65,8 @@ var OPERATIONS = {
 
 var NUM_OF_OPERANDS = {
     "abs" : 1,
-    "negate" : 1,
     "iff" : 3,
+    "negate" : 1,
     "+" : 2,
     "-" : 2,
     "*" : 2,

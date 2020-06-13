@@ -19,15 +19,15 @@
 (def ops {'+      add, '- subtract, '* multiply, '/ divide
           'negate negate, 'max max, 'min min})
 
-(defn parse-sexp [sexp]
+(defn parse-exp [exp]
   (cond
-    (number? sexp) (constant sexp)
-    (symbol? sexp) (variable (str sexp))
-    (list? sexp) (let [[head & args] sexp, op (ops head)]
-                   (apply op (map parse-sexp args)))))
+    (number? exp) (constant exp)
+    (symbol? exp) (variable (str exp))
+    (list? exp) (let [[head & args] exp, op (ops head)]
+                   (apply op (map parse-exp args)))))
 
 (defn parseFunction [string]
-  (parse-sexp (read-string string)))
+  (parse-exp (read-string string)))
 
 (defn constant [value]
   (fn [arguments] value))
@@ -86,59 +86,6 @@
 (def Negate (constructor Operation (getOperator - "negate"
                                                 (fn [f s] (Negate (diff (first f) s))))))
 
-(def Square (constructor Operation (getOperator (fn [x] ( * x x)) "square"
-                                                (fn [f s] (Multiply (Multiply (Constant 2)) (diff (first f) s))))))
-
-(def Sqrt (constructor Operation (getOperator (fn [x] (Math/sqrt(Math/abs ^double x))) "sqrt"
-                                              (fn [f s] (Divide
-                                                          (Multiply s f)
-                                                          (Multiply (Constant 2) (Sqrt (Multiply (Square s) s))))))))
-
-
-(def Lg (constructor Operation (getOperator
-                                 (fn [x y] (/ (Math/log (Math/abs ^double y)) (Math/log (Math/abs ^double x)))) "lg"
-                                 (fn [f s t v] (Subtract
-                                                 (Divide v (Multiply s (Lg (Constant Math/E ) f)))
-                                                 (Divide
-                                                   (Multiply (Lg (Constant Math/E) s) t)
-                                                   (Multiply f
-                                                             (Square
-                                                               (Lg (Constant Math/E) f)))))))))
-
-(def Pw (constructor Operation (getOperator (fn [x y] (Math/pow x y)) "pw"
-                                            (fn [f s t v] (Add
-                                                            (Multiply
-                                                              (Multiply s
-                                                                        (Pw f
-                                                                            (Subtract s (Constant 1)))) t)
-                                                            (Multiply
-                                                              (Multiply
-                                                                (Pw f s)
-                                                                (Lg (Constant Math/E) f)) v))))))
-
-
-
-
-(def And (constructor Operation (getOperator
-                                  (fn [x y]
-                                    (Double/longBitsToDouble
-                                      (bit-and (Double/doubleToLongBits x) (Double/doubleToLongBits y))))
-                                  "&" (fn [f s t v] (Constant 0)))))
-
-
-(def Or (constructor Operation (getOperator
-                                 (fn [x y]
-                                   (Double/longBitsToDouble
-                                     (bit-or (Double/doubleToLongBits x) (Double/doubleToLongBits y)))) "|"
-                                 (fn [f s t v] (Constant 0)))))
-
-(def Xor (constructor Operation (getOperator
-                                  (fn [x y]
-                                    (Double/longBitsToDouble
-                                      (bit-xor (Double/doubleToLongBits x) (Double/doubleToLongBits y)))) "^"
-                                  (fn [f s t v] (Constant 0)))))
-
-
 (defn parse [operators c v] (defn parseImpl [item] (cond
                                                      (number? item) (c item)
                                                      (symbol? item) (v (str item))
@@ -147,9 +94,6 @@
                                                                     (map parseImpl (rest item)))
                                                      )))
 
-(def objectOperators {'+ Add '- Subtract '* Multiply '/ Divide 'negate Negate
-                      'square Square 'sqrt Sqrt 'pw Pw 'lg Lg})
+(def objectOperators {'+ Add '- Subtract '* Multiply '/ Divide 'negate Negate})
 
-(defn parseObject [s] ((parse objectOperators Constant
-
-                              Variable) (read-string s)))
+(defn parseObject [s] ((parse objectOperators Constant Variable) (read-string s)))

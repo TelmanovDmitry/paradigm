@@ -44,10 +44,6 @@ function createNewOperation(operation, symbol, operandsNum) {
     return Operation;
 }
 
-var Sqrt = createNewOperation(function (args) { return Math.sqrt(Math.abs(args[0])); }, "sqrt", 1);
-
-var Square = createNewOperation(function (args) { return args[0] * args[0]; }, "square", 1);
-
 var Negate = createNewOperation(function (args) { return -args[0]; }, "negate", 1);
 
 var Subtract = createNewOperation(function(args) { return args[0] - args[1]; }, "-", 2);
@@ -57,6 +53,10 @@ var Add = createNewOperation(function(args) { return args[0] + args[1]; }, "+", 
 var Multiply = createNewOperation(function(args) { return args[0] * args[1]; }, "*", 2);
 
 var Divide = createNewOperation(function(args) { return args[0] / args[1]; }, "/", 2);
+
+var Min3 = createNewOperation(function(args) { return Math.min(args[0], args[1], args[2]); }, "min3", 3);
+
+var Max5 = createNewOperation(function(args) { return Math.max(args[0], args[1], args[2], args[3], args[4]); }, "max5", 5);
 
 function Const(value) {
     this.value = value;
