@@ -44,10 +44,6 @@ function createNewOperation(operation, symbol, operandsNum) {
     return Operation;
 }
 
-var Sqrt = createNewOperation(function (args) { return Math.sqrt(Math.abs(args[0])); }, "sqrt", 1);
-
-var Square = createNewOperation(function (args) { return args[0] * args[0]; }, "square", 1);
-
 var Negate = createNewOperation(function (args) { return -args[0]; }, "negate", 1);
 
 var Subtract = createNewOperation(function(args) { return args[0] - args[1]; }, "-", 2);

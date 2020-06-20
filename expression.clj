@@ -7,7 +7,7 @@
 (def add (make-op +))
 (def subtract (make-op -))
 (def multiply (make-op *))
-(def divide (make-op #(/ (double %1) %2)))
+(def divide (make-op #(/(double %1) %2)))
 (def negate (make-op -))
 (def negate (make-op -))
 (def max (make-op clojure.core/max))
@@ -16,8 +16,14 @@
 (defn variable [name] (fn [vars] (vars name)))
 (defn constant [value] (constantly value))
 
-(def ops {'+      add, '- subtract, '* multiply, '/ divide
-          'negate negate, 'max max, 'min min})
+(def ops {
+          '+      add,
+          '- subtract,
+          '* multiply,
+          '/ divide
+          'negate negate,
+          'max max,
+          'min min})
 
 (defn parse-exp [exp]
   (cond
@@ -37,7 +43,7 @@
 
 ;;Object
 
-(defn constructor [ctor methods] (fn [& args] (apply (partial ctor {:methods methods}) args)))
+(defn constructor [constr methods] (fn [& args] (apply (partial constr {:methods methods}) args)))
 
 (defn diff [this name] (((this :methods) :differentiate) this name))
 (defn evaluate [this args] (((this :methods) :evaluate) this args))
@@ -80,11 +86,40 @@
 (def Subtract (constructor Operation (getOperator - "-"
                                                   (fn [f s] (apply Subtract (map (fn [x] (diff x s)) f))))))
 (def Multiply (constructor Operation (getOperator * "*"
-                                                  (defn mult-diff [f s] (cond (empty? (rest f)) (diff (first f) s) :else (Add (apply Multiply (cons (diff (first f) s) (rest f))) (Multiply (first f) (mult-diff (rest f) s))))))))
+                                                  (defn mult-diff [f s] (cond
+                                                                          (empty? (rest f)) (diff (first f) s)
+                                                                          :else
+                                                                          (Add (apply Multiply
+                                                                                      (cons (diff (first f) s) (rest f)))
+                                                                               (Multiply (first f) (mult-diff (rest f) s))))))))
 (def Divide (constructor Operation (getOperator (fn [x y] (/ x (double y))) "/"
-                                                (fn [f s] (Divide (Subtract (Multiply (diff (first f) s) (second f)) (Multiply (diff (second f) s) (first f))) (Multiply (second f) (second f)))))))
+                                                (fn [f s] (Divide (Subtract (Multiply (diff (first f) s) (second f))
+                                                                            (Multiply (diff (second f) s) (first f)))
+                                                                  (Multiply (second f) (second f)))))))
 (def Negate (constructor Operation (getOperator - "negate"
                                                 (fn [f s] (Negate (diff (first f) s))))))
+
+(def Square (constructor Operation (getOperator (fn [x] ( * x x)) "square"
+                                                (fn [f s] (Multiply (Multiply (Constant 2) f) (diff (first f) s))))))
+
+(def Lg (constructor Operation (getOperator
+                                 (fn [x y] (/ (Math/log (Math/abs ^double y)) (Math/log (Math/abs ^double x)))) "lg"
+                                 (fn [f s] (Subtract
+                                                   (Divide (diff (second f) s) (Multiply (second f) (Lg (Constant Math/E ) (first f))))
+                                                   (Divide
+                                                     (Multiply (Lg (Constant Math/E) (second f)) (diff (first f) s))
+                                                     (Multiply (first f)
+                                                               (Square
+                                                                 (Lg (Constant Math/E) (first f))))))))))
+
+(def Pw (constructor Operation (getOperator (fn [x y] (Math/pow x y)) "pw"
+                                            (fn [f s] (Add (Multiply (Multiply (second f) (Pw (first f)
+                                                                              (Subtract (second f) (Constant 1))))
+                                                                     (diff (first f) s))
+                                                           (Multiply
+                                                                (Multiply
+                                                                  (Pw (first f) (second f))
+                                                                  (Lg (Constant Math/E) (first f))) (diff (second f) s)))))))
 
 (defn parse [operators c v] (defn parseImpl [item] (cond
                                                      (number? item) (c item)
@@ -94,6 +129,13 @@
                                                                     (map parseImpl (rest item)))
                                                      )))
 
-(def objectOperators {'+ Add '- Subtract '* Multiply '/ Divide 'negate Negate})
+(def objectOperators {
+                      '+ Add
+                      '- Subtract
+                      '* Multiply
+                      '/ Divide
+                      'negate Negate
+                      'pw Pw
+                      'lg Lg})
 
 (defn parseObject [s] ((parse objectOperators Constant Variable) (read-string s)))
